@@ -11,17 +11,18 @@ function doPost(e) {
 }
 
 function handleRequest(e) {
-  var action = e.parameter.action;
+  // CORS & Preflight / Header Handling
+  var action = e && e.parameter ? e.parameter.action : "";
   var postData = {};
   
-  if (e.postData && e.postData.contents) {
+  if (e && e.postData && e.postData.contents) {
     try {
       postData = JSON.parse(e.postData.contents);
       if (!action) action = postData.action;
     } catch (err) {}
   }
 
-  var response = { status: "error", message: "Invalid Action" };
+  var response = { status: "error", message: "Invalid Action or Empty Request" };
 
   try {
     if (action === "getMenus") {
@@ -80,7 +81,6 @@ function getMenus(userId, role) {
       createdAt: String(row[10] || "")
     };
 
-    // Filter Hak Akses (Visibility)
     var isVisible = false;
     if (menuObj.visibility === "UMUM") {
       isVisible = true;
@@ -97,7 +97,6 @@ function getMenus(userId, role) {
     }
   }
 
-  // Susun Hirarki (Parent - Submenu)
   var tree = [];
   var menuMap = {};
 
@@ -124,7 +123,6 @@ function saveMenu(p) {
   var now = new Date().toISOString();
 
   if (menuId) {
-    // UPDATE DATA EKSISTING
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][0]) === String(menuId)) {
         sheet.getRange(i + 1, 2).setValue(p.parentId || "");
@@ -140,7 +138,6 @@ function saveMenu(p) {
     }
   }
 
-  // INSERT DATA BARU
   var newId = "MENU-" + new Date().getTime();
   sheet.appendRow([
     newId,
